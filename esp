@@ -443,7 +443,7 @@ esp.renderfunction = game['Run Service'].PreRender:Connect(function()
             nameMain.Visible = esp.shownames and visibility or false 
             if nameMain.Visible then 
                 nameMain.Text = settings.codedname or character.Name; -- (main.Size*4)
-                local box = settings.objects.Box.obj
+                local box = boxMain
                 local boxPos = box.Position
                 local boxSize = box.Size
                 nameMain.Position = v2New(positional.X, boxPos.Y) - v2New(0, nameMain.TextBounds.Y - boxSize.Y) --(positional.Y - main.Size*1.5) - main.Size/2 ); -- v2New(positional.X, settings.objects.Box.obj.Position.Y + (settings.objects.Box.obj.Size.Y + settings.objects.Box.obj.Size.Y /2) ); --onVector + v2New(0,3)    
