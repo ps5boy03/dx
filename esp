@@ -596,7 +596,22 @@ esp.renderfunction = game['Run Service'].PreRender:Connect(function()
                 rightleg_foot.Visible = false
 
             end;
+        else
+            nameMain.Visible = false;
+            distanceMain.Visible = false;
+            boxMain.Visible = false;
+            healthMain.Visible = false;
+            healthBoxMain.Visible = false;
 
+            neck_torso.Visible = false
+            torso_leftarm.Visible = false
+            torso_rightarm.Visible = false
+            torso_leftleg.Visible = false
+            torso_rightleg.Visible = false
+            leftarm_hand.Visible = false
+            rightarm_hand.Visible = false
+            leftleg_foot.Visible = false
+            rightleg_foot.Visible = false
         end;
         
     end;
