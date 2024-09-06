@@ -28,6 +28,7 @@ getgenv().esp = {
     maximumInstanceRenderDistance = 150; --999;
     maximumPlayerEspRender = 1000;
     skeleton = false; --true; --false;
+    healthbar = false;
 }; -- could use a metatable to set anything in rendering to nil to remove it
 local localPlayer = {}; local metaforit = {};
 setmetatable(localPlayer,metaforit);
@@ -426,6 +427,12 @@ esp.renderfunction = game['Run Service'].PreRender:Connect(function()
                     visibility = false;
                 end;
             end;
+            if flag == 'box' and visibility == true then 
+                if esp.boxesp == false then visibility = false end;
+            end;
+            if (flag == 'health' or flag == 'healthbar') and visibility == true then 
+                if esp.healthbar == false then visibility = false end;
+            end;
             main.Visible = visibility
             --print(visibility)
             -- instead of localPlayer we do server
@@ -453,7 +460,6 @@ esp.renderfunction = game['Run Service'].PreRender:Connect(function()
                 end;
             elseif flag == 'box' and settings.active and onVector and visibility then 
                 --print(vpSizeX / positional.Z)
-
                 main.Size = v2New(num * torso.Size.X, headPosition.Y - legPosition.Y); --  v2New(4, headPosition - legPosition)
                 main.Position = v2New(positional.X - main.Size.X / 2, positional.Y - main.Size.Y/2); -- v2New(onVector.X, onVector.Y)
             
