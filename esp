@@ -313,6 +313,7 @@ local r6Type = Enum.HumanoidRigType.R6
 local splitString = string.split
 local v2New = Vector2.new
 esp.renderfunction = game['Run Service'].PreRender:Connect(function()
+    debug.profilebegin('character esp')
     if 
         (esp.enabled == false and esp.didDeactivate == true)
     then 
@@ -329,237 +330,299 @@ esp.renderfunction = game['Run Service'].PreRender:Connect(function()
                 esp.functions.cleanup()
             end
         end;      
-        for i, object in next, settings.objects do 
-            if settings.single then 
-                debug.profilebegin('single part esp')
-                local objectPosition = character.Position;
-                local vp, vis = WorldToViewportPoint(camera, objectPosition) -- object.target
-                --local isBeyondRenderDistance = ((localPlayer.rootPart and localPlayer.rootPart.Position or camera.CFrame.Position) - character.Position).Magnitude;
-                if vp.Z > esp.maximumInstanceRenderDistance and not settings.bypassRenderDistance then  -- isBeyondRenderDistance
-                    vis = false;
-                end;
-                if settings.env and settings.access and not settings.env[settings.access] then 
-                    --settings.envDisable = true 
-                    vis = false;
-                end
-                if settings.noshow then 
-                    vis = false;
-                end;
-                object.obj.Visible = vis;
-                if vis then 
-                    local objectOfDistinction = localPlayer.rootPart and localPlayer.rootPart.CFrame or camera.CFrame
-                    local dist = (objectOfDistinction.Position - objectPosition).Magnitude -- object.target
-                    object.obj.Text = `{settings.codedname or tostring(character)}, {math.round(dist)}s`; -- object.target
-                    object.obj.Position = v2New(vp.X,  vp.Y ); --char Y act er
-                end
-                debug.profileend('')
-                continue; -- doesnt have a relation
+        local humanoid = findFirstChild(character, 'Humanoid');
+        local humanoidrootpart = findFirstChild(character, 'HumanoidRootPart'); -- RightUpperLeg
+        local leg = findFirstChild(character, 'Right Leg') or findFirstChild(character, 'RightUpperLeg') or findFirstChild(character, 'RightUpperLeg')
+        local leftleg = findFirstChild(character, 'Left Leg') or findFirstChild(character, 'LeftUpperLeg') or findFirstChild(character, 'LeftUpperLeg') -- l e f l e g
+        local leftarm = findFirstChild(character, 'Left Arm') or findFirstChild(character, 'LeftUpperArm')
+        local rightarm = findFirstChild(character, 'Right Arm') or findFirstChild(character, 'RightUpperArm')
+        local isr6 = humanoid.RigType == r6Type
+        local torso = findFirstChild(character, 'Torso') or findFirstChild(character, 'UpperTorso');
+        local torsoObj = torso and torso.Position; --  x t o r s o
+        local torsoSize = torso and torso.Size;
+        local realHeadObj = nil;
+        if settings.single then 
+            debug.profilebegin('single part esp')
+            local objectPosition = character.Position;
+            local vp, vis = WorldToViewportPoint(camera, objectPosition) -- object.target
+            --local isBeyondRenderDistance = ((localPlayer.rootPart and localPlayer.rootPart.Position or camera.CFrame.Position) - character.Position).Magnitude;
+            if vp.Z > esp.maximumInstanceRenderDistance and not settings.bypassRenderDistance then  -- isBeyondRenderDistance
+                vis = false;
             end;
-            debug.profilebegin('character esp')
-            local main = object.obj;
-            local flag = object.flag;
-            local flag2 = object.flag2
-            local positional, isvisible = nil,nil;
-            local default = nil; local squares = {};  local hpSquares = {}
-            local onVector = nil;
-            local mainsize = main.Size or esp.boxsize
-            local legPosition = nil;
-            local headPosition = nil;
-            local healthdefault = nil;
-            local humanoid = findFirstChild(character, 'Humanoid');
-            local humanoidrootpart = findFirstChild(character, 'HumanoidRootPart'); -- RightUpperLeg
-            local leg = findFirstChild(character, 'Right Leg') or findFirstChild(character, 'RightUpperLeg') or findFirstChild(character, 'RightUpperLeg')
-            local leftleg = findFirstChild(character, 'Left Leg') or findFirstChild(character, 'LeftUpperLeg') or findFirstChild(character, 'LeftUpperLeg') -- l e f l e g
-            local leftarm = findFirstChild(character, 'Left Arm') or findFirstChild(character, 'LeftUpperArm')
-            local rightarm = findFirstChild(character, 'Right Arm') or findFirstChild(character, 'RightUpperArm')
-            local isr6 = humanoid.RigType == r6Type
-            local torso = findFirstChild(character, 'Torso') or findFirstChild(character, 'UpperTorso');
-            local torsoObj = torso and torso.Position; --  x t o r s o
-            local torsoSize = torso and torso.Size;
-            local realHeadObj = nil;
-            if humanoid and findFirstChild(character, 'Head') and torso then 
-                local headObj = findFirstChild(character, 'Head')
-                if headObj:IsA('Model') then 
-                    headObj = headObj.PrimaryPart or headObj:FindFirstChildWhichIsA('BasePart') -- B a e P a r t
-                end;
-                realHeadObj = headObj
-                -- math.abs(leg.Size.Y - torsoObj.Y) + (torso.Size.Y)*2
-                headPosition = headObj.Position + Vector3.new(0,0,0) --  + (torso.Size.Y/2)
-                local mainY = torsoObj.Y - (leg.Size.Y + torsoSize.Y + headObj.Size.Y); --headObj.Size.Y + leg.Size.Y + torsoSize.Y ; -- torsoObj.Y - (leg.Size.Y + torsoSize.Y)
-                legPosition = Vector3.new(torsoObj.X, mainY , torsoObj.Z) ;-- humanoidrootpart.Position + Vector3.new(0,-4,0)
-                -- if humanoid.RigType == Enum.HumanoidRigType.R6 then -- use humanoidrootpart * -4
-                --     legPosition = character['Right Leg'].Position + Vector3.new(0,-3,0) -- Right Leg  Humnoid
-                -- else
-                --     legPosition = character['RightFoot'].Position
-                -- end;
-                legPosition = WorldToViewportPoint(camera, legPosition)
-                headPosition = WorldToViewportPoint(camera, headPosition)
+            if settings.env and settings.access and not settings.env[settings.access] then 
+                --settings.envDisable = true 
+                vis = false;
+            end
+            if settings.noshow then 
+                vis = false;
             end;
-            if findFirstChild(character, 'HumanoidRootPart') then 
-                default = humanoidrootpart.CFrame --* CFrame.new(0, -1, 0)
-                healthdefault = default; --humanoidrootpart.CFrame -- CFrame.new(-4, -1, 0)
-                squares = {
-                    base = default; --* CFrame.new(0, mainsize/2,0);
-                    topleft = default * CFrame.new(-2,3,0);
-                    topright = default * CFrame.new(2,3,0);
-                    bottomleft = default * CFrame.new(-2,-3,0);
-                    bottomright = default * CFrame.new(2,-3,0);
-                }
-                -- hpSquares = {
-                --     topleft = healthdefault * CFrame.new(-1,3,0);
-                --     topright = healthdefault * CFrame.new(1,3,0);
-                --     bottomleft = healthdefault * CFrame.new(-1,-3,0);
-                --     bottomright = healthdefault * CFrame.new(1,-3,0);
-                -- }
-                pcall(function()
-                    positional, isvisible = WorldToViewportPoint(camera, squares.base.Position)
-                end)
-            end;
-            if positional then 
-                onVector = v2New(positional.X, positional.Y);
-            end;
-            local visibility = esp.enabled == true and settings.active and isvisible and onVector and headPosition and legPosition and true; 
-            if __players:GetPlayerFromCharacter(character) then 
-                if esp.playeresp == false then 
-                    visibility = false;
-                end
-                if positional and positional.Z > esp.maximumPlayerEspRender then 
-                    visibility = false;
-                end;
-            end;
-            if flag == 'box' and visibility == true then 
-                if esp.boxesp == false then visibility = false end;
-            end;
-            if (flag == 'health' or flag == 'healthbar') and visibility == true then 
-                if esp.healthbar == false then visibility = false end;
-            end;
-            main.Visible = visibility
-            --print(visibility)
-            -- instead of localPlayer we do server
-            local viewPortSize =  workspace.CurrentCamera.ViewportSize
-            local vpSizeX = viewPortSize.X -- check if changed for cache
-            local vpSizeY = viewPortSize.Y
-
-            local num = positional and vpSizeX / positional.Z
-            local original = num and num * 2
-
-            if flag  == 'name' and settings.active and onVector and visibility then 
-                if settings.active and onVector then 
-                    main.Text = settings.codedname or character.Name; -- (main.Size*4)
-                    local box = settings.objects.Box.obj
-                    local boxPos = box.Position
-                    local boxSize = box.Size
-                    main.Position = v2New(positional.X, boxPos.Y) - v2New(0, main.TextBounds.Y - boxSize.Y) --(positional.Y - main.Size*1.5) - main.Size/2 ); -- v2New(positional.X, settings.objects.Box.obj.Position.Y + (settings.objects.Box.obj.Size.Y + settings.objects.Box.obj.Size.Y /2) ); --onVector + v2New(0,3)
-                end;
-            elseif flag == 'distance' and settings.active and onVector and visibility then 
+            object.obj.Visible = vis;
+            if vis then 
                 local objectOfDistinction = localPlayer.rootPart and localPlayer.rootPart.CFrame or camera.CFrame
-                local dist = (objectOfDistinction.Position - humanoidrootpart.Position).Magnitude
-                if settings.active and onVector then 
-                    main.Text = `{math.round(dist)}s`;
-                    main.Position = v2New(positional.X, settings.objects.Box.obj.Position.Y - 1 ); --onVector + v2New(0,3)
-                end;
-            elseif flag == 'box' and settings.active and onVector and visibility then 
-                --print(vpSizeX / positional.Z)
-                main.Size = v2New(num * torso.Size.X, headPosition.Y - legPosition.Y); --  v2New(4, headPosition - legPosition)
-                main.Position = v2New(positional.X - main.Size.X / 2, positional.Y - main.Size.Y/2); -- v2New(onVector.X, onVector.Y)
-            
-            elseif flag == 'health' and settings.active and onVector and visibility then 
-                local minused = positional.X - main.Size.X
-                main.Size = v2New(num/3, headPosition.Y - legPosition.Y)
-                local based = positional.X - settings.objects.Box.obj.Size.X/1.3
-                main.Position = v2New(based, positional.Y - main.Size.Y/2);
+                local dist = (objectOfDistinction.Position - objectPosition).Magnitude -- object.target
+                object.obj.Text = `{settings.codedname or tostring(character)}, {math.round(dist)}s`; -- object.target
+                object.obj.Position = v2New(vp.X,  vp.Y ); --char Y act er
+            end
+            debug.profileend('')
+            continue; -- doesnt have a relation
+        end;
+        local main = object.obj;
+        local flag = object.flag;
+        local flag2 = object.flag2
+        local positional, isvisible = nil,nil;
+        local default = nil; local squares = {};  local hpSquares = {}
+        local onVector = nil;
+        local mainsize = main.Size or esp.boxsize
+        local legPosition = nil;
+        local headPosition = nil;
+        local healthdefault = nil;
 
-                --main.Position = settings.objects.Box.obj.Position - v2New(20,0); --v2New(settings.objects.Box.obj.Position.X, positional.Y - main.Size.Y/2);
-                
-                --main.Position = v2New(settings.objects.Box.obj.Position.X - 45, positional.Y - main.Size.Y/2)
-                --print(settings.objects.Box.obj, settings.objects.Box.obj.Position)
-            
-            elseif flag == 'healthbar' and settings.active and onVector and visibility then 
-                local minused = positional.X - main.Size.X
+
+        if humanoid and findFirstChild(character, 'Head') and torso then 
+            local headObj = findFirstChild(character, 'Head')
+            if headObj:IsA('Model') then 
+                headObj = headObj.PrimaryPart or headObj:FindFirstChildWhichIsA('BasePart') -- B a e P a r t
+            end;
+            realHeadObj = headObj
+            -- math.abs(leg.Size.Y - torsoObj.Y) + (torso.Size.Y)*2
+            headPosition = headObj.Position + Vector3.new(0,0,0) --  + (torso.Size.Y/2)
+            local mainY = torsoObj.Y - (leg.Size.Y + torsoSize.Y + headObj.Size.Y); --headObj.Size.Y + leg.Size.Y + torsoSize.Y ; -- torsoObj.Y - (leg.Size.Y + torsoSize.Y)
+            legPosition = Vector3.new(torsoObj.X, mainY , torsoObj.Z) ;-- humanoidrootpart.Position + Vector3.new(0,-4,0)
+            -- if humanoid.RigType == Enum.HumanoidRigType.R6 then -- use humanoidrootpart * -4
+            --     legPosition = character['Right Leg'].Position + Vector3.new(0,-3,0) -- Right Leg  Humnoid
+            -- else
+            --     legPosition = character['RightFoot'].Position
+            -- end;
+            legPosition = WorldToViewportPoint(camera, legPosition)
+            headPosition = WorldToViewportPoint(camera, headPosition)
+        end;
+        if findFirstChild(character, 'HumanoidRootPart') then 
+            default = humanoidrootpart.CFrame --* CFrame.new(0, -1, 0)
+            healthdefault = default; --humanoidrootpart.CFrame -- CFrame.new(-4, -1, 0)
+            squares = {
+                base = default; --* CFrame.new(0, mainsize/2,0);
+                topleft = default * CFrame.new(-2,3,0);
+                topright = default * CFrame.new(2,3,0);
+                bottomleft = default * CFrame.new(-2,-3,0);
+                bottomright = default * CFrame.new(2,-3,0);
+            }
+            -- hpSquares = {
+            --     topleft = healthdefault * CFrame.new(-1,3,0);
+            --     topright = healthdefault * CFrame.new(1,3,0);
+            --     bottomleft = healthdefault * CFrame.new(-1,-3,0);
+            --     bottomright = healthdefault * CFrame.new(1,-3,0);
+            -- }
+            pcall(function()
+                positional, isvisible = WorldToViewportPoint(camera, squares.base.Position)
+            end)
+        end;
+        if positional then 
+            onVector = v2New(positional.X, positional.Y);
+        end;
+        local visibility = esp.enabled == true and settings.active and isvisible and onVector and headPosition and legPosition and true; 
+        if __players:GetPlayerFromCharacter(character) then 
+            if esp.playeresp == false then 
+                visibility = false;
+            end
+            if positional and positional.Z > esp.maximumPlayerEspRender then 
+                visibility = false;
+            end;
+        end;
+        if flag == 'box' and visibility == true then 
+            if esp.boxesp == false then visibility = false end;
+        end;
+        if (flag == 'health' or flag == 'healthbar') and visibility == true then 
+            if esp.healthbar == false then visibility = false end;
+        end;
+        main.Visible = visibility
+        --print(visibility)
+        -- instead of localPlayer we do server
+        local viewPortSize =  workspace.CurrentCamera.ViewportSize
+        local vpSizeX = viewPortSize.X -- check if changed for cache
+        local vpSizeY = viewPortSize.Y
+
+        local num = positional and vpSizeX / positional.Z
+        local original = num and num * 2
+
+        local nameMain = settings.objects.Name.obj
+        local distanceMain = settings.objects.Distance.obj
+        local boxMain = settings.objects.Box.obj
+        local healthMain = settings.objects.Health.obj
+        local healthBoxMain = settings.objects.HealthBar.obj
+        local neck_torso = settings.objects.neck_torso.obj
+        local torso_leftarm = settings.objects.torso_leftarm.obj
+        local torso_rightarm = settings.objects.torso_rightarm.obj
+        local torso_leftleg = settings.objects.torso_leftleg.obj
+        local torso_rightleg = settings.objects.torso_rightleg.obj
+        local leftarm_hand = settings.objects.leftarm_hand.obj
+        local rightarm_hand = settings.objects.rightarm_hand.obj
+        local leftleg_foot = settings.objects.leftleg_foot.obj
+        local rightleg_foot = settings.objects.rightleg_foot.obj
+
+        
+        if settings.active and onVector and visibility then 
+            -- Name
+            nameMain.Text = settings.codedname or character.Name; -- (main.Size*4)
+            local box = settings.objects.Box.obj
+            local boxPos = box.Position
+            local boxSize = box.Size
+            nameMain.Position = v2New(positional.X, boxPos.Y) - v2New(0, nameMain.TextBounds.Y - boxSize.Y) --(positional.Y - main.Size*1.5) - main.Size/2 ); -- v2New(positional.X, settings.objects.Box.obj.Position.Y + (settings.objects.Box.obj.Size.Y + settings.objects.Box.obj.Size.Y /2) ); --onVector + v2New(0,3)
+        
+            -- Distance
+            local objectOfDistinction = localPlayer.rootPart and localPlayer.rootPart.CFrame or camera.CFrame
+            local dist = (objectOfDistinction.Position - humanoidrootpart.Position).Magnitude
+            distanceMain.Text = `{math.round(dist)}s`;
+            distanceMain.Position = v2New(positional.X, settings.objects.Box.obj.Position.Y - 1 ); --onVector + v2New(0,3)
+        
+
+            -- box
+            if esp.boxesp then 
+                boxMain.Size = v2New(num * torso.Size.X, headPosition.Y - legPosition.Y); --  v2New(4, headPosition - legPosition)
+                boxMain.Position = v2New(positional.X - boxMain.Size.X / 2, positional.Y - boxMain.Size.Y/2); -- v2New(onVector.X, onVector.Y)    
+            else
+                boxMain.Visible = false
+            end;
+
+            -- health
+            if esp.healthbar then 
+                local minused = positional.X - healthMain.Size.X
+                healthMain.Size = v2New(num/3, headPosition.Y - legPosition.Y)
+                local based = positional.X - settings.objects.Box.obj.Size.X/1.3
+                healthMain.Position = v2New(based, positional.Y - healthMain.Size.Y/2);
+            else
+                healthMain.Visible = false
+            end;
+
+            -- health bar
+            if esp.healthbar then 
+                local minused = positional.X - healthBoxMain.Size.X
                 local defaultHeight = (headPosition.Y - legPosition.Y)
                 local percentage = (humanoid.MaxHealth / humanoid.Health)
                 local ymath = defaultHeight / percentage
-                main.Size = v2New(num/3.001, ymath)
+                healthBoxMain.Size = v2New(num/3.001, ymath)
                 local based = positional.X - settings.objects.Box.obj.Size.X/1.3
-                local basey = positional.Y - main.Size.Y/2
-                local fillUp = (defaultHeight - ymath) / 2 -- +
-                --warn(ymath, basey)
-                main.Position = v2New(based, basey  - fillUp );
-
-                -- local defaultHeight = (headPosition.Y - legPosition.Y) --+ 1;
-                -- local percentage = 0;
-                -- main.Size = v2New(num/3.2, defaultHeight / (humanoid.MaxHealth / humanoid.Health)) -- defaultHeight - percentage
-                -- local based = positional.X - settings.objects.Box.obj.Size.X/1.3
-                -- local barPosition = settings.objects.Health.obj.Position
-                -- main.Position = v2New(based , barPosition.Y + 1) --v2New(based, positional.Y - main.Size.Y/2);
-                
-                
-                --main.Position = settings.objects.Box.obj.Position - v2New(20,0);
-            elseif flag == 'skeleton' and settings.active and onVector and visibility then 
-                if esp.skeleton then 
-                    local skeleCFrames = {
-                        ['neck_torso'] = {to = realHeadObj.Position - Vector3.new(0,0.2,0), from = torsoObj - Vector3.new(0, 0.51, 0)};
-                        ['torso_leftarm'] = {to = leftarm.Position - Vector3.new(0, 0.5, 0), from = torsoObj + Vector3.new(0, 0.5, 0)};
-                        ['torso_rightarm'] = {to = rightarm.Position - Vector3.new(0, 0.5, 0) , from = torsoObj + Vector3.new(0, 0.5, 0)};
-                        ['torso_leftleg'] = {to = leftleg.Position, from = torsoObj - Vector3.new(0, 0.5, 0)};
-                        ['torso_rightleg'] = {to = leg.Position, from = torsoObj - Vector3.new(0, 0.5, 0)};
-                        --['neck_torso'] = {to = headPosition, from = torsoObj};
-                        --['neck_torso'] = {to = headPosition, from = torsoObj};
-                    }
-                    if isr6 then 
-                        skeleCFrames['torso_leftarm'].to += Vector3.new(0, 1.25, 0)
-                        skeleCFrames['torso_rightarm'].to += Vector3.new(0, 1.25, 0)
-                        skeleCFrames['torso_leftleg'].to += Vector3.new(0, 1.25, 0)
-                        skeleCFrames['torso_rightleg'].to += Vector3.new(0, 1.25, 0)
-                    end;
-                    skeleCFrames['leftarm_hand'] = {to = skeleCFrames.torso_leftarm.to - Vector3.new(0, 1, 0), from = skeleCFrames.torso_leftarm.to}
-                    skeleCFrames['rightarm_hand'] = {to = skeleCFrames.torso_rightarm.to - Vector3.new(0, 1, 0), from = skeleCFrames.torso_rightarm.to}
-                    skeleCFrames['leftleg_foot'] = {to = skeleCFrames.torso_leftleg.to - Vector3.new(0, 1, 0), from = skeleCFrames.torso_leftleg.to}
-                    skeleCFrames['rightleg_foot'] = {to = skeleCFrames.torso_rightleg.to - Vector3.new(0, 1, 0), from = skeleCFrames.torso_rightleg.to}
-                    if isr6 then 
-                        skeleCFrames['leftarm_hand'].to -= Vector3.new(0, 0.5, 0)
-                        skeleCFrames['rightarm_hand'].to -= Vector3.new(0, 0.5, 0)
-                        skeleCFrames['leftleg_foot'].to -= Vector3.new(0, 1, 0)
-                        skeleCFrames['rightleg_foot'].to -= Vector3.new(0, 1, 0)
-                    end;
-                    local identifier = splitString(i, '-')[2];
-                    local positionValue = skeleCFrames[identifier]
-                    if positionValue then 
-                        local viewPosition, isVisible = WorldToViewportPoint(camera, positionValue.to)
-                        local viewPositionFrom, isVisible2 = WorldToViewportPoint(camera, positionValue.from)
-                        if isVisible and isVisible2 then 
-                            main.To = v2New(viewPosition.X, viewPosition.Y);
-                            main.From =  v2New(viewPositionFrom.X, viewPositionFrom.Y); --v2New(localPlayer.X, Mouse.Y); -- v2New(viewPositionFrom.X, viewPositionFrom.Y)
-                            main.Visible = true
-                            --main.Thickness = 3
-                           -- print('thank you, next next')
-                        end;
-                        -- object.To = positionValue.to;
-                        -- object.From = positionValue.from
-                        -- object.Visible = true
-                    end;
-                    -- neck_torso
-                    -- torso_leftarm
-                    -- leftarm_hand
-                    -- torso_rightarm
-                    -- rightarm_hand
-                    -- torso_leftleg
-                    -- leftleg_foot
-                    -- torso_rightleg
-                    -- rightleg_foot
-                else
-                    object.Visible = false
-                end;
+                local basey = positional.Y - healthBoxMain.Size.Y/2
+                local fillUp = (defaultHeight - ymath) / 2 
+                healthBoxMain.Position = v2New(based, basey  - fillUp );
+            else
+                healthBoxMain.Visible = false
             end;
-            
-            debug.profileend('')
+
+            -- skeletons
+            if esp.skeleton then 
+                local skeleCFrames = {
+                    ['neck_torso'] = {to = realHeadObj.Position - Vector3.new(0,0.2,0), from = torsoObj - Vector3.new(0, 0.51, 0)};
+                    ['torso_leftarm'] = {to = leftarm.Position - Vector3.new(0, 0.5, 0), from = torsoObj + Vector3.new(0, 0.5, 0)};
+                    ['torso_rightarm'] = {to = rightarm.Position - Vector3.new(0, 0.5, 0) , from = torsoObj + Vector3.new(0, 0.5, 0)};
+                    ['torso_leftleg'] = {to = leftleg.Position, from = torsoObj - Vector3.new(0, 0.5, 0)};
+                    ['torso_rightleg'] = {to = leg.Position, from = torsoObj - Vector3.new(0, 0.5, 0)};
+                }
+                if isr6 then 
+                    skeleCFrames['torso_leftarm'].to += Vector3.new(0, 1.25, 0)
+                    skeleCFrames['torso_rightarm'].to += Vector3.new(0, 1.25, 0)
+                    skeleCFrames['torso_leftleg'].to += Vector3.new(0, 1.25, 0)
+                    skeleCFrames['torso_rightleg'].to += Vector3.new(0, 1.25, 0)
+                end;
+                skeleCFrames['leftarm_hand'] = {to = skeleCFrames.torso_leftarm.to - Vector3.new(0, 1, 0), from = skeleCFrames.torso_leftarm.to}
+                skeleCFrames['rightarm_hand'] = {to = skeleCFrames.torso_rightarm.to - Vector3.new(0, 1, 0), from = skeleCFrames.torso_rightarm.to}
+                skeleCFrames['leftleg_foot'] = {to = skeleCFrames.torso_leftleg.to - Vector3.new(0, 1, 0), from = skeleCFrames.torso_leftleg.to}
+                skeleCFrames['rightleg_foot'] = {to = skeleCFrames.torso_rightleg.to - Vector3.new(0, 1, 0), from = skeleCFrames.torso_rightleg.to}
+                if isr6 then 
+                    skeleCFrames['leftarm_hand'].to -= Vector3.new(0, 0.5, 0)
+                    skeleCFrames['rightarm_hand'].to -= Vector3.new(0, 0.5, 0)
+                    skeleCFrames['leftleg_foot'].to -= Vector3.new(0, 1, 0)
+                    skeleCFrames['rightleg_foot'].to -= Vector3.new(0, 1, 0)
+                end;
+    
+    
+                do 
+                    local neckPos, isVisible = WorldToViewportPoint(camera, skeleCFrames['neck_torso'].to)
+                    local neckPos2, isVisible2 = WorldToViewportPoint(camera, skeleCFrames['neck_torso'].from)
+                    if neckPos and neckPos2 then 
+                        neck_torso.To = v2New(neckPos.X, neckPos.Y);
+                        neck_torso.From =  v2New(neckPos2.X, neckPos2.Y);
+                        neck_torso.Visible = true
+                    end;
+                    neckPos, isVisible = WorldToViewportPoint(camera, skeleCFrames['torso_leftarm'].to)
+                    neckPos2, isVisible2 = WorldToViewportPoint(camera, skeleCFrames['torso_leftarm'].from)
+                    if neckPos and neckPos2 then 
+                        torso_leftarm.To = v2New(neckPos.X, neckPos.Y);
+                        torso_leftarm.From =  v2New(neckPos2.X, neckPos2.Y);
+                        torso_leftarm.Visible = true
+                    end;
+                    neckPos, isVisible = WorldToViewportPoint(camera, skeleCFrames['torso_rightarm'].to)
+                    neckPos2, isVisible2 = WorldToViewportPoint(camera, skeleCFrames['torso_rightarm'].from)
+                    if neckPos and neckPos2 then 
+                        torso_rightarm.To = v2New(neckPos.X, neckPos.Y);
+                        torso_rightarm.From =  v2New(neckPos2.X, neckPos2.Y);
+                        torso_rightarm.Visible = true
+                    end;
+                    neckPos, isVisible = WorldToViewportPoint(camera, skeleCFrames['torso_leftleg'].to)
+                    neckPos2, isVisible2 = WorldToViewportPoint(camera, skeleCFrames['torso_leftleg'].from)
+                    if neckPos and neckPos2 then 
+                        torso_leftleg.To = v2New(neckPos.X, neckPos.Y);
+                        torso_leftleg.From =  v2New(neckPos2.X, neckPos2.Y);
+                        torso_leftleg.Visible = true
+                    end;
+                    neckPos, isVisible = WorldToViewportPoint(camera, skeleCFrames['torso_rightleg'].to)
+                    neckPos2, isVisible2 = WorldToViewportPoint(camera, skeleCFrames['torso_rightleg'].from)
+                    if neckPos and neckPos2 then 
+                        torso_rightleg.To = v2New(neckPos.X, neckPos.Y);
+                        torso_rightleg.From =  v2New(neckPos2.X, neckPos2.Y);
+                        torso_rightleg.Visible = true
+                    end;
+                    neckPos, isVisible = WorldToViewportPoint(camera, skeleCFrames['leftarm_hand'].to)
+                    neckPos2, isVisible2 = WorldToViewportPoint(camera, skeleCFrames['leftarm_hand'].from)
+                    if neckPos and neckPos2 then 
+                        leftarm_hand.To = v2New(neckPos.X, neckPos.Y);
+                        leftarm_hand.From =  v2New(neckPos2.X, neckPos2.Y);
+                        leftarm_hand.Visible = true
+                    end;
+                    neckPos, isVisible = WorldToViewportPoint(camera, skeleCFrames['rightarm_hand'].to)
+                    neckPos2, isVisible2 = WorldToViewportPoint(camera, skeleCFrames['rightarm_hand'].from)
+                    if neckPos and neckPos2 then 
+                        rightarm_hand.To = v2New(neckPos.X, neckPos.Y);
+                        rightarm_hand.From =  v2New(neckPos2.X, neckPos2.Y);
+                        rightarm_hand.Visible = true
+                    end;
+                    neckPos, isVisible = WorldToViewportPoint(camera, skeleCFrames['leftleg_foot'].to)
+                    neckPos2, isVisible2 = WorldToViewportPoint(camera, skeleCFrames['leftleg_foot'].from)
+                    if neckPos and neckPos2 then 
+                        leftleg_foot.To = v2New(neckPos.X, neckPos.Y);
+                        leftleg_foot.From =  v2New(neckPos2.X, neckPos2.Y);
+                        leftleg_foot.Visible = true
+                    end;
+                    neckPos, isVisible = WorldToViewportPoint(camera, skeleCFrames['rightleg_foot'].to)
+                    neckPos2, isVisible2 = WorldToViewportPoint(camera, skeleCFrames['rightleg_foot'].from)
+                    if neckPos and neckPos2 then 
+                        rightleg_foot.To = v2New(neckPos.X, neckPos.Y);
+                        rightleg_foot.From =  v2New(neckPos2.X, neckPos2.Y);
+                        rightleg_foot.Visible = true
+                    end;
+    
+                end;
+            else
+                neck_torso.Visible = false
+                torso_leftarm.Visible = false
+                torso_rightarm.Visible = false
+                torso_leftleg.Visible = false
+                torso_rightleg.Visible = false
+                leftarm_hand.Visible = false
+                rightarm_hand.Visible = false
+                leftleg_foot.Visible = false
+                rightleg_foot.Visible = false
+
+            end;
+
         end;
+        
     end;
     if 
         (esp.enabled == false and esp.didDeactivate == false)
     then 
         esp.didDeactivate = true 
     end;
+    debug.profileend('')
 end);
 
 return esp
