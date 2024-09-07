@@ -441,12 +441,15 @@ esp.renderfunction = game['Run Service'].PreRender:Connect(function()
             -- Name
             --print('yeaah')
             nameMain.Visible = esp.shownames and visibility or false 
+            local toBoxSize = v2New(num * torso.Size.X, headPosition.Y - legPosition.Y)
+            local toBoxPosition =  v2New(positional.X - toBoxSize.X / 2, positional.Y - toBoxSize.Y/2)
+
             if nameMain.Visible then 
                 nameMain.Text = settings.codedname or character.Name; -- (main.Size*4)
-                local box = boxMain
-                local boxPos = box.Position
-                local boxSize = box.Size
-                nameMain.Position = v2New(positional.X, boxPos.Y) - v2New(0, nameMain.TextBounds.Y - boxSize.Y) --(positional.Y - main.Size*1.5) - main.Size/2 ); -- v2New(positional.X, settings.objects.Box.obj.Position.Y + (settings.objects.Box.obj.Size.Y + settings.objects.Box.obj.Size.Y /2) ); --onVector + v2New(0,3)    
+                -- local box = boxMain
+                -- local boxPos = box.Position
+                -- local boxSize = box.Size
+                nameMain.Position = v2New(positional.X, toBoxPosition.Y) - v2New(0, nameMain.TextBounds.Y - toBoxSize.Y) --v2New(positional.X, positional.Y) + Vector2.new(0, -10, 0) -- v2New(positional.X, boxPos.Y) - v2New(0, nameMain.TextBounds.Y - boxSize.Y) --(positional.Y - main.Size*1.5) - main.Size/2 ); -- v2New(positional.X, settings.objects.Box.obj.Position.Y + (settings.objects.Box.obj.Size.Y + settings.objects.Box.obj.Size.Y /2) ); --onVector + v2New(0,3)    
             end
 
             -- Distance
@@ -455,13 +458,13 @@ esp.renderfunction = game['Run Service'].PreRender:Connect(function()
                 local objectOfDistinction = localPlayer.rootPart and localPlayer.rootPart.CFrame or camera.CFrame
                 local dist = (objectOfDistinction.Position - humanoidrootpart.Position).Magnitude
                 distanceMain.Text = `{math.round(dist)}s`;
-                distanceMain.Position = v2New(positional.X, settings.objects.Box.obj.Position.Y - 1 ); --onVector + v2New(0,3)    
+                distanceMain.Position = v2New(positional.X, toBoxPosition.Y - 2 ) --v2New(positional.X, positional.Y) + Vector3.new()   --v2New(positional.X, settings.objects.Box.obj.Position.Y - 1 ); --onVector + v2New(0,3)    
             end;
 
             -- box
             if esp.boxesp then 
-                boxMain.Size = v2New(num * torso.Size.X, headPosition.Y - legPosition.Y); --  v2New(4, headPosition - legPosition)
-                boxMain.Position = v2New(positional.X - boxMain.Size.X / 2, positional.Y - boxMain.Size.Y/2); -- v2New(onVector.X, onVector.Y)    
+                boxMain.Size = toBoxSize --v2New(num * torso.Size.X, headPosition.Y - legPosition.Y); --  v2New(4, headPosition - legPosition)
+                boxMain.Position = toBoxPosition --v2New(positional.X - boxMain.Size.X / 2, positional.Y - boxMain.Size.Y/2); -- v2New(onVector.X, onVector.Y)    
             else
                 boxMain.Visible = false
             end;
@@ -470,7 +473,8 @@ esp.renderfunction = game['Run Service'].PreRender:Connect(function()
             if esp.healthbar then 
                 local minused = positional.X - healthMain.Size.X
                 healthMain.Size = v2New(num/3, headPosition.Y - legPosition.Y)
-                local based = positional.X - settings.objects.Box.obj.Size.X/1.3
+                --local toBoxSize = v2New(num * torso.Size.X, headPosition.Y - legPosition.Y)
+                local based = positional.X - toBoxSize.X/1.3
                 healthMain.Position = v2New(based, positional.Y - healthMain.Size.Y/2);
             else
                 healthMain.Visible = false
