@@ -11,8 +11,8 @@ if getgenv().esp and getgenv().esp.license == 'm1xous' then -- esp.renderfunctio
     getgenv().esp.functions = {}
 end;
 getgenv().esp = {
-    enabled = true; --true; --false; --true;
-    playeresp = true; --true; --false;
+    enabled = false; --true; --false; --true;
+    playeresp = false; --true; --false;
     rendering = {};
     unrendering = {};
     displayTeams = false;
@@ -31,7 +31,7 @@ getgenv().esp = {
     healthbar = false;
     shownames = false;
     showdistance = false;
-    boxesp = true;
+    boxesp = false;
     healthbaroutline = false;
 }; -- could use a metatable to set anything in rendering to nil to remove it
 local localPlayer = {}; local metaforit = {};
