@@ -6,7 +6,10 @@ if getgenv().esp and getgenv().esp.license == 'm1xous' then -- esp.renderfunctio
         end;
         getgenv().esp .rendering[instance] = nil;
     end;
-    getgenv().esp.renderfunction:Disconnect()
+    pcall(function()
+        getgenv().esp.renderfunction:Disconnect()
+    end)
+    --getgenv().esp.renderfunction:Disconnect()
     getgenv().esp.rendering = {}
     getgenv().esp.functions = {}
 end;
