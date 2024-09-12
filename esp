@@ -295,18 +295,20 @@ end;
 
 esp.functions.playerendering = function(player, __character)
     if player == localPlayer.instance then return end;
-    player.CharacterAdded:Connect(function()
-        esp.functions.new(player.Character)
-        esp.functions.listentoDeletion(player.Character)
+    task.spawn(function()
+        player.CharacterAdded:Connect(function()
+            esp.functions.new(player.Character)
+            esp.functions.listentoDeletion(player.Character)
+        end)
+        player.CharacterRemoving:Connect(function()
+            esp.functions.delete(player.Character)
+        end)
+        if player.Character then 
+            --warn('esp add', player.Name)
+            esp.functions.new(player.Character)
+            esp.functions.listentoDeletion(player.Character)
+        end;
     end)
-    player.CharacterRemoving:Connect(function()
-        esp.functions.delete(player.Character)
-    end)
-    if player.Character then 
-        --warn('esp add', player.Name)
-        esp.functions.new(player.Character)
-        esp.functions.listentoDeletion(player.Character)
-    end;
 end;
 
 for i, player in next, __players:GetPlayers() do
