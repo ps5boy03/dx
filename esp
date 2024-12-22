@@ -164,7 +164,7 @@ esp.functions.create_esp = function(obj, props)
 	end
     return new;
 end;
-esp.functions.loadNecessities = function(tbl)
+esp.functions.loadNecessities = function(tbl) -- usefulOnly
 
     tbl.objects['Name'] = {
         obj = esp.functions.create_esp('Text', {
@@ -177,9 +177,6 @@ esp.functions.loadNecessities = function(tbl)
         });
         flag = 'name'
     };
-    if tbl.single then 
-        return
-    end;
     tbl.objects['Distance'] = { -- Diast
         obj = esp.functions.create_esp('Text', {
             Center = true,
@@ -190,6 +187,9 @@ esp.functions.loadNecessities = function(tbl)
         });
         flag = 'distance'
     };
+    if tbl.single then 
+        return
+    end;
     tbl.objects['Box'] = {
         obj = esp.functions.create_esp('Square', {
 			Thickness = 2,
@@ -371,7 +371,9 @@ esp.renderfunction = game['Run Service'].PreRender:Connect(function()
             local objectPosition = character.Position;
             local vp, vis = WorldToViewportPoint(camera, objectPosition) -- object.target
             --local isBeyondRenderDistance = ((localPlayer.rootPart and localPlayer.rootPart.Position or camera.CFrame.Position) - character.Position).Magnitude;
-            if vp.Z > esp.maximumInstanceRenderDistance and not settings.bypassRenderDistance then  -- isBeyondRenderDistance
+            local renderDistance = settings.customdistance and esp[settings.customdistance] or esp.maximumInstanceRenderDistance
+            local toSetVisible = settings.customvisibility and esp[settings.customvisibility] or 'notset'  -- isVisible
+            if vp.Z > renderDistance and not settings.bypassRenderDistance then  -- isBeyondRenderDistance  esp.maximumInstanceRenderDistance
                 vis = false;
             end;
             if settings.env and settings.access and not settings.env[settings.access] then 
@@ -380,6 +382,9 @@ esp.renderfunction = game['Run Service'].PreRender:Connect(function()
             end
             if settings.noshow then 
                 vis = false;
+            end;
+            if toSetVisible ~= 'notset' and vis == true then 
+                vis = toSetVisible
             end;
             object.obj.Visible = vis;
             if vis then 
